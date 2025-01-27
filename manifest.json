@@ -1,0 +1,15 @@
+{
+  "domain": "orkli_termowifi",
+  "name": "Orkli Termowifi",
+  "version": "0.1.0",
+  "codeowners": [
+    "@diegogd"
+  ],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/orkli_termowifi",
+  "iot_class": "local_polling",
+  "loggers": [
+    "orkli"
+  ],
+  "requirements": []
+}
