@@ -123,14 +123,21 @@ class Room:
 
     def parse_response(self, response, header_type: TraceHeader = None):
         """Parse the response from the Termowifi system."""
-        processed = False
+        processed = True
         value_changed = False
         command = response[4]
         value = response[5]
         checksum = response[6]
         checksum_diff = 0x00 if header_type == TraceHeader.VALID_CONFIRMATION else 0x06
+        log_prefix = (
+            f"[{self.name}]* "
+            if header_type == TraceHeader.VALID_CONFIRMATION
+            else f"[{self.name}] "
+        )
 
-        processed = True
+        if value == 0x00:
+            _LOGGER.debug("%s Ignoring value 0x00 that is confirmation", log_prefix)
+            return processed
 
         # Info response
         base_info = self.id * 4
@@ -164,7 +171,7 @@ class Room:
                 if self.operation_state != OperationState.COOL:
                     value_changed = True
                 self.operation_state = OperationState.COOL
-            _LOGGER.debug("[%s] Operation state: %s", self.name, self.operation_state)
+            _LOGGER.debug("%s Operation state: %s", log_prefix, self.operation_state)
         # Configured temperature
         elif (
             command == base_info + 2
@@ -175,7 +182,11 @@ class Room:
                 value_changed = True
             self.conf_temperature = new_conf_temperature
             _LOGGER.debug(
-                "[%s] Configured temperature: %s", self.name, self.conf_temperature
+                "%s Configured temperature: %s (cmd: 0x%02x, val: 0x%02x)",
+                log_prefix,
+                self.conf_temperature,
+                command,
+                value,
             )
         # Room temperature
         elif (
@@ -186,7 +197,13 @@ class Room:
             if self.temperature != new_temperature:
                 value_changed = True
             self.temperature = new_temperature
-            _LOGGER.debug("[%s] Temperature: %s", self.name, self.temperature)
+            _LOGGER.debug(
+                "%s Temperature: %s (cmd: 0x%02x, val: 0x%02x)",
+                log_prefix,
+                self.temperature,
+                command,
+                value,
+            )
         # Humidity
         elif (
             command == self.id + 0x64
@@ -197,16 +214,16 @@ class Room:
                 value_changed = True
             self.humidity = new_humidity
             _LOGGER.debug(
-                "[%s] Humidity: %s (cmd: 0x%02x, val: 0x%02x)",
-                self.name,
+                "%s Humidity: %s (cmd: 0x%02x, val: 0x%02x)",
+                log_prefix,
                 self.humidity,
                 command,
                 value,
             )
         else:
             _LOGGER.debug(
-                "[%s] Unknown command: 0x%02x (%s) with value 0x%02x (%s) [checksum: 0x%02x]",
-                self.name,
+                "%s Unknown command: 0x%02x (%s) with value 0x%02x (%s) [checksum: 0x%02x]",
+                log_prefix,
                 command,
                 command,
                 value,

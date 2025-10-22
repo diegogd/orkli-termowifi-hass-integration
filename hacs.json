@@ -3,6 +3,6 @@
     "domains": [
         "climate"
     ],
-    "homeassistant": "2021.12.1",
+    "homeassistant": "2025.08.1",
     "render_readme": true
 }
