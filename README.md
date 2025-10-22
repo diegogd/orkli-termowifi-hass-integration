@@ -18,16 +18,30 @@ other configurations.
 - Home Assistant (use the latest stable release)
 - The Termowifi device reachable on your local network (IP and port)
 
-## Installation
+{% if not installed %}
 
-1. Copy the `orkli_termowifi` folder into your Home Assistant `custom_components` folder:
-   - `config/custom_components/orkli_termowifi`
-2. Restart Home Assistant.
-3. Add the integration from **Settings → Devices & Services → Integrations → Add integration**
-   and search for `Orkli Termowifi`. Provide the device IP address and port when prompted.
+### Installation:
 
-Note: This integration uses config entries (UI setup). Do not add platform configuration
-to `configuration.yaml`.
+[![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=diegogd&repository=orkli-termowifi-hass-integration&category=integration)
+
+* Go to HACS -> Integrations
+* Click the three dots on the top right and select `Custom Repositories`
+* Enter `https://github.com/diegogd/orkli-termowifi-hass-integration` as repository, select the category `Integration` and click Add
+* A new custom integration shows up for installation (Orkli Termowifi) - install it
+* Restart Home Assistant
+
+{% endif %}
+
+## Configuration
+
+[![Open your Home Assistant instance and start setting up a new integration.](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start/?domain=orkli_termowifi)
+
+* Go to Configuration -> Integrations
+* Click `Add Integration`
+* Search for `Orkli Termowifi` and select it
+* Provide the device IP address and port when prompted
+
+Note: This integration uses config entries (UI setup). Do not add platform configuration to `configuration.yaml`.
 
 ## Configuration example
 
