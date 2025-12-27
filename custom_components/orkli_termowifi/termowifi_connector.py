@@ -4,6 +4,7 @@ import asyncio
 import contextlib
 import enum
 import logging
+import socket
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -306,9 +307,29 @@ class TermowifiConnector:
                         _LOGGER.debug(
                             "Attempting to connect to %s:%s", self.host, self.port
                         )
-                        self.reader, self.writer = await asyncio.open_connection(
-                            self.host, self.port
+                        # Add timeout to connection attempt
+                        self.reader, self.writer = await asyncio.wait_for(
+                            asyncio.open_connection(self.host, self.port), timeout=10
                         )
+
+                        # Set TCP Keepalive to detect dead connections
+                        sock = self.writer.get_extra_info("socket")
+                        if sock is not None:
+                            sock.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
+                            # Linux-specific options (often available on other *nix)
+                            if hasattr(socket, "TCP_KEEPIDLE"):
+                                sock.setsockopt(
+                                    socket.IPPROTO_TCP, socket.TCP_KEEPIDLE, 60
+                                )
+                            if hasattr(socket, "TCP_KEEPINTVL"):
+                                sock.setsockopt(
+                                    socket.IPPROTO_TCP, socket.TCP_KEEPINTVL, 10
+                                )
+                            if hasattr(socket, "TCP_KEEPCNT"):
+                                sock.setsockopt(
+                                    socket.IPPROTO_TCP, socket.TCP_KEEPCNT, 3
+                                )
+
                         _LOGGER.info("Connected to %s:%s", self.host, self.port)
                         backoff = 1  # Reset backoff on success
 
@@ -322,8 +343,8 @@ class TermowifiConnector:
                 await self._async_cleanup()
                 await asyncio.sleep(backoff)
                 backoff = min(backoff * 2, 60)
-            except Exception as err:
-                _LOGGER.exception("Unexpected error in reader loop: %s", err)
+            except Exception:
+                _LOGGER.exception("Unexpected error in reader loop")
                 await self._async_cleanup()
                 await asyncio.sleep(backoff)
                 backoff = min(backoff * 2, 60)
@@ -332,7 +353,10 @@ class TermowifiConnector:
         """Continuously read from the socket and process responses."""
         buffer = b""
         while True:
-            data = await self.reader.read(1024)
+            # Wait for data with a timeout (watchdog)
+            # If no data is received within 150 seconds (2.5x standard polling interval),
+            # consider the connection dead and reconnect.
+            data = await asyncio.wait_for(self.reader.read(1024), timeout=150)
             if not data:
                 _LOGGER.warning("Connection closed by server")
                 break
