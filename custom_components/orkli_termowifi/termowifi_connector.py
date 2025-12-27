@@ -264,55 +264,85 @@ class TermowifiConnector:
         self.writer = None
 
         self._writer_lock = asyncio.Lock()
+        self._connect_lock = asyncio.Lock()
         self._reader_task = None
 
     async def connect(self):
-        """Establish a connection to the server."""
-        self.reader, self.writer = await asyncio.open_connection(self.host, self.port)
-        _LOGGER.debug("Connected to %s:%s", self.host, self.port)
-
-        # Lanzamos el listener en background
+        """Ensure the connection is established and supervisor is running."""
         if self._reader_task is None or self._reader_task.done():
             self._reader_task = self.hass.loop.create_task(
                 self._reader_loop(), name="termowifi-reader"
             )
-            # self._reader_task = self.hass.async_create_task(self._reader_loop())
+
+        # Give it a moment to connect if it's new
+        await asyncio.sleep(0.1)
 
     async def async_close(self):
         """Close the connection and cancel reader task."""
-        if self.writer is not None:
-            self.writer.close()
-            await self.writer.wait_closed()
-
         if self._reader_task is not None:
             self._reader_task.cancel()
             with contextlib.suppress(asyncio.CancelledError):
                 await self._reader_task
 
+        await self._async_cleanup()
+
+    async def _async_cleanup(self):
+        """Clean up socket resources."""
+        _LOGGER.debug("Cleaning up connection resources")
+        if self.writer is not None:
+            self.writer.close()
+            with contextlib.suppress(OSError):
+                await self.writer.wait_closed()
+        self.writer = None
+        self.reader = None
+
     async def _reader_loop(self):
-        """Background task to continuously read from the socket and process responses."""
+        """Supervisor loop to handle connection and reading."""
+        backoff = 1
+        while True:
+            try:
+                async with self._connect_lock:
+                    if self.writer is None:
+                        _LOGGER.debug(
+                            "Attempting to connect to %s:%s", self.host, self.port
+                        )
+                        self.reader, self.writer = await asyncio.open_connection(
+                            self.host, self.port
+                        )
+                        _LOGGER.info("Connected to %s:%s", self.host, self.port)
+                        backoff = 1  # Reset backoff on success
+
+                await self._read_socket()
+
+            except asyncio.CancelledError:
+                _LOGGER.debug("Reader loop cancelled")
+                break
+            except (ConnectionError, OSError, asyncio.TimeoutError) as err:
+                _LOGGER.error("Connection error: %s. Retrying in %ss", err, backoff)
+                await self._async_cleanup()
+                await asyncio.sleep(backoff)
+                backoff = min(backoff * 2, 60)
+            except Exception as err:
+                _LOGGER.exception("Unexpected error in reader loop: %s", err)
+                await self._async_cleanup()
+                await asyncio.sleep(backoff)
+                backoff = min(backoff * 2, 60)
+
+    async def _read_socket(self):
+        """Continuously read from the socket and process responses."""
         buffer = b""
-        try:
-            while True:
-                data = await self.reader.read(1024)
-                if not data:
-                    _LOGGER.warning("Connection closed by server")
-                    break
+        while True:
+            data = await self.reader.read(1024)
+            if not data:
+                _LOGGER.warning("Connection closed by server")
+                break
 
-                buffer += data
+            buffer += data
 
-                while len(buffer) >= 7:
-                    response = buffer[:7]
-                    buffer = buffer[7:]
-                    # _LOGGER.info("Received: %s", response.hex())
-
-                    self.process_socket_response(response)
-        except asyncio.CancelledError:
-            _LOGGER.debug("Reader task cancelled")
-        except (ConnectionError, OSError) as err:
-            _LOGGER.error("Network error in reader loop: %s", err)
-        except asyncio.IncompleteReadError as err:
-            _LOGGER.error("Incomplete read error in reader loop: %s", err)
+            while len(buffer) >= 7:
+                response = buffer[:7]
+                buffer = buffer[7:]
+                self.process_socket_response(response)
 
     def process_socket_response(self, response):
         """Process a response received from the socket."""
@@ -353,13 +383,19 @@ class TermowifiConnector:
         if self.writer is None:
             await self.connect()
 
-        message_bytes = bytes(message)
+        # Wait for a potential reconnection in progress
+        async with self._connect_lock:
+            if self.writer is None:
+                _LOGGER.warning("Cannot send trace: Not connected")
+                return
 
-        async with self._writer_lock:
-            for _ in range(repeat):
-                self.writer.write(message_bytes)
-                await self.writer.drain()
-        _LOGGER.debug("Sent: %s", message_bytes.hex())
+            message_bytes = bytes(message)
+
+            async with self._writer_lock:
+                for _ in range(repeat):
+                    self.writer.write(message_bytes)
+                    await self.writer.drain()
+            _LOGGER.debug("Sent: %s", message_bytes.hex())
 
     def get_rooms(self):
         """Get the list of rooms."""
