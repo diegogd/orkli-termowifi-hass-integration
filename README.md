@@ -77,6 +77,13 @@ with `hass.loop.call_soon_threadsafe(...)` or report the issue with logs attache
 - Restart Home Assistant after code changes or use the integration reload flow where applicable.
 - Run tests with pytest; follow repository testing conventions.
 
+## Releasing
+
+HACS detects updates from GitHub releases. To publish a new version:
+
+1. Bump `version` in `custom_components/orkli_termowifi/manifest.json`.
+2. Push to `master` and create a release whose tag is `v<version>` (e.g. `v0.2.0`).
+
 ## Recommended commands (from the repository root):
 
 - Run linters: pre-commit run --all-files

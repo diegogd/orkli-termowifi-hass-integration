@@ -1,15 +1,13 @@
 {
   "domain": "orkli_termowifi",
   "name": "Orkli Termowifi",
-  "version": "0.1.3",
   "codeowners": [
     "@diegogd"
   ],
   "config_flow": true,
-  "documentation": "https://www.home-assistant.io/integrations/orkli_termowifi",
-  "iot_class": "local_polling",
-  "loggers": [
-    "orkli"
-  ],
-  "requirements": []
+  "documentation": "https://github.com/diegogd/orkli-termowifi-hass-integration",
+  "iot_class": "local_push",
+  "issue_tracker": "https://github.com/diegogd/orkli-termowifi-hass-integration/issues",
+  "requirements": [],
+  "version": "0.2.0"
 }

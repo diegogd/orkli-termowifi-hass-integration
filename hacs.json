@@ -1,8 +1,5 @@
 {
     "name": "Orkli Termowifi",
-    "domains": [
-        "climate"
-    ],
     "homeassistant": "2025.08.1",
     "render_readme": true
 }
