@@ -55,10 +55,6 @@ async def async_setup_entry(
         ),
     )
 
-    _LOGGER.debug("Initializing Orkli Termowifi connector")
-    await orkli_handler.async_initialize()
-    _LOGGER.debug("Orkli Termowifi connector initialized")
-
     async def _async_add_room(room: TermowifiRoom) -> None:
         """Add a new room entity (runs on the event loop)."""
         entity = orkli_termowifiSensorEntity(
@@ -69,13 +65,21 @@ async def async_setup_entry(
         async_add_entities([entity])
         await entity.async_update()
 
-    async_dispatcher_connect(
-        hass,
-        f"{DOMAIN}_new_room",
-        lambda room: hass.loop.call_soon_threadsafe(
-            hass.async_create_task, _async_add_room(room)
-        ),
+    config_entry.async_on_unload(
+        async_dispatcher_connect(
+            hass,
+            f"{DOMAIN}_new_room",
+            lambda room: hass.loop.call_soon_threadsafe(
+                hass.async_create_task, _async_add_room(room)
+            ),
+        )
     )
+    config_entry.async_on_unload(orkli_handler.async_close)
+
+    # Rooms are discovered from the status reports, so listen before initializing
+    _LOGGER.debug("Initializing Orkli Termowifi connector")
+    await orkli_handler.async_initialize()
+    _LOGGER.debug("Orkli Termowifi connector initialized")
 
 
 class orkli_termowifiSensorEntity(ClimateEntity):
