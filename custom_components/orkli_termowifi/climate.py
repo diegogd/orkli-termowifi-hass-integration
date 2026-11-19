@@ -47,6 +47,8 @@ async def async_setup_entry(
         config_entry.data[CONF_PORT],
         hass=hass,
     )
+    # Lets the config flow know whether the entry still reaches its device
+    config_entry.runtime_data = orkli_handler
     # Closes the connection when HA stops
     hass.bus.async_listen_once(
         EVENT_HOMEASSISTANT_STOP,

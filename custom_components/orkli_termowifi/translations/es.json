@@ -1,0 +1,43 @@
+{
+  "config": {
+    "flow_title": "TermoWifi ({host})",
+    "step": {
+      "user": {
+        "description": "Busca el TermoWifi en la red local o introduce su dirección.",
+        "menu_options": {
+          "scan": "Buscar automáticamente",
+          "manual": "Introducir la dirección"
+        }
+      },
+      "pick": {
+        "description": "Selecciona el TermoWifi que quieres configurar.",
+        "data": {
+          "ip_address": "TermoWifi"
+        }
+      },
+      "manual": {
+        "description": "Dirección del TermoWifi en la red local.",
+        "data": {
+          "ip_address": "Dirección IP",
+          "port": "Puerto"
+        }
+      },
+      "discovery_confirm": {
+        "description": "¿Configurar el TermoWifi encontrado en {host}?"
+      }
+    },
+    "progress": {
+      "scan": "Buscando dispositivos TermoWifi en la red local. Puede tardar hasta un minuto."
+    },
+    "error": {
+      "cannot_connect": "No se puede conectar con el dispositivo. Envía de nuevo para añadirlo igualmente.",
+      "not_termowifi": "El dispositivo no responde como un TermoWifi. Envía de nuevo para añadirlo igualmente.",
+      "no_devices_found": "No se ha encontrado ningún TermoWifi en la red. Introduce su dirección."
+    },
+    "abort": {
+      "already_configured": "Este TermoWifi ya está configurado.",
+      "not_termowifi": "El dispositivo no es un TermoWifi.",
+      "cannot_connect": "No se puede conectar con el dispositivo."
+    }
+  }
+}

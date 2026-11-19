@@ -39,16 +39,37 @@ other configurations.
 * Go to Configuration -> Integrations
 * Click `Add Integration`
 * Search for `Orkli Termowifi` and select it
-* Provide the device IP address and port when prompted
+* Choose **Search automatically** to scan the local network, or **Enter the address** to type the IP and port
+
+### Discovery
+
+- **DHCP:** Home Assistant offers the TermoWifi in *Discovered* when it sees a
+  device with an Espressif MAC prefix (`F4:CF:A2`) that answers like a
+  TermoWifi on port 12345. The entry follows the device if its IP changes.
+  Other Espressif devices are checked and ignored.
+- **Search:** scans the networks of Home Assistant (up to a /22; larger networks
+  are reduced to the /24 around Home Assistant) for port 12345. It can take
+  up to a minute.
+- The device does not announce itself (no mDNS or UDP discovery), so a TermoWifi
+  with a different MAC prefix is only found by the search.
+- To check a device, the integration connects to port 12345 and sends the
+  read-only status dump request (`3B 01 FE 04 23 00 26`). Any other device on the
+  network listening on that port receives these bytes during a search.
+- A device set up by hand gets its MAC the first time DHCP sees it. If its IP
+  changed and it is the only entry set up by hand that lost its connection,
+  the entry is moved to the new IP.
 
 Note: This integration uses config entries (UI setup). Do not add platform configuration to `configuration.yaml`.
 
 ## Configuration example
 
-During setup you will be asked for:
+When entering the address you will be asked for:
 
 - `IP address` — Termowifi device IP
-- `Port` — Termowifi device TCP port
+- `Port` — Termowifi device TCP port (12345)
+
+The device is checked before the entry is created. If the check fails, submit
+the same address again to add it anyway.
 
 Entity unique IDs follow the pattern: `{config_entry_id}_{room_id}`
 

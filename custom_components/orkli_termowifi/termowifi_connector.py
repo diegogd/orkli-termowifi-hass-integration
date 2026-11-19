@@ -251,6 +251,11 @@ class TermowifiConnector:
         self._reader_task = None
         self._discovery_task = None
 
+    @property
+    def connected(self) -> bool:
+        """Return whether the socket to the device is open."""
+        return self.writer is not None
+
     async def connect(self):
         """Ensure the connection is established and supervisor is running."""
         if self._reader_task is None or self._reader_task.done():
