@@ -1,22 +1,43 @@
 {
-    "config": {
-        "step": {
-            "user": {
-                "data": {
-                    "entity_id": "Input sensor",
-                    "name": "Name"
-                },
-                "description": "New NEW_NAME Sensor"
-            }
+  "config": {
+    "flow_title": "TermoWifi ({host})",
+    "step": {
+      "user": {
+        "description": "Search the local network for the TermoWifi or enter its address.",
+        "menu_options": {
+          "scan": "Search automatically",
+          "manual": "Enter the address"
         }
+      },
+      "pick": {
+        "description": "Select the TermoWifi to set up.",
+        "data": {
+          "ip_address": "TermoWifi"
+        }
+      },
+      "manual": {
+        "description": "Address of the TermoWifi on the local network.",
+        "data": {
+          "ip_address": "IP address",
+          "port": "Port"
+        }
+      },
+      "discovery_confirm": {
+        "description": "Set up the TermoWifi found at {host}?"
+      }
     },
-    "options": {
-        "step": {
-            "init": {
-                "data": {
-                    "entity_id": "[%key:component::NEW_DOMAIN::config::step::user::description%]"
-                }
-            }
-        }
+    "progress": {
+      "scan": "Searching the local network for TermoWifi devices. This can take up to a minute."
+    },
+    "error": {
+      "cannot_connect": "Cannot connect to the device. Submit again to add it anyway.",
+      "not_termowifi": "The device does not answer like a TermoWifi. Submit again to add it anyway.",
+      "no_devices_found": "No TermoWifi found on the network. Enter its address."
+    },
+    "abort": {
+      "already_configured": "This TermoWifi is already configured.",
+      "not_termowifi": "The device is not a TermoWifi.",
+      "cannot_connect": "Cannot connect to the device."
     }
+  }
 }
