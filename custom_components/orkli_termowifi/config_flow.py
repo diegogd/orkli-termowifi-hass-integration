@@ -11,6 +11,7 @@ import voluptuous as vol
 
 from homeassistant.components import network
 from homeassistant.config_entries import (
+    SOURCE_IGNORE,
     ConfigEntry,
     ConfigEntryState,
     ConfigFlow,
@@ -180,8 +181,21 @@ class OrkliTermowifiConfigFlow(ConfigFlow, domain=DOMAIN):
         host = discovery_info.ip
         mac = format_mac(discovery_info.macaddress)
         await self.async_set_unique_id(mac)
-        # Follows the IP address of a device already configured
-        self._abort_if_unique_id_configured(updates={CONF_IP_ADDRESS: host})
+        # Follows the IP address of a device already configured. HA only
+        # reloads loaded entries on update, so an entry still connecting to
+        # the old address would keep it: always schedule the reload.
+        for entry in self._async_current_entries(include_ignore=True):
+            if entry.unique_id != mac:
+                continue
+            if (
+                entry.source != SOURCE_IGNORE
+                and entry.data.get(CONF_IP_ADDRESS) != host
+            ):
+                self.hass.config_entries.async_update_entry(
+                    entry, data={**entry.data, CONF_IP_ADDRESS: host}
+                )
+                self.hass.config_entries.async_schedule_reload(entry.entry_id)
+            return self.async_abort(reason="already_configured")
 
         # Entries set up by hand have no unique id: adopt the MAC
         legacy = [
