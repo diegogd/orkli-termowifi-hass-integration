@@ -24,6 +24,13 @@
       },
       "discovery_confirm": {
         "description": "Set up the TermoWifi found at {host}?"
+      },
+      "reconfigure": {
+        "description": "Change the address of the TermoWifi. The entities and automations are kept.",
+        "data": {
+          "ip_address": "IP address",
+          "port": "Port"
+        }
       }
     },
     "progress": {
@@ -37,7 +44,9 @@
     "abort": {
       "already_configured": "This TermoWifi is already configured.",
       "not_termowifi": "The device is not a TermoWifi.",
-      "cannot_connect": "Cannot connect to the device."
+      "cannot_connect": "Cannot connect to the device.",
+      "already_configured_inactive": "{title} already uses {host}, but it is disabled or not connected. Enable it, or use Reconfigure on it to change its address.",
+      "reconfigure_successful": "The address has been updated."
     }
   }
 }

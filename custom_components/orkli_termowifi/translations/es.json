@@ -24,6 +24,13 @@
       },
       "discovery_confirm": {
         "description": "¿Configurar el TermoWifi encontrado en {host}?"
+      },
+      "reconfigure": {
+        "description": "Cambia la dirección del TermoWifi. Se conservan las entidades y automatizaciones.",
+        "data": {
+          "ip_address": "Dirección IP",
+          "port": "Puerto"
+        }
       }
     },
     "progress": {
@@ -37,7 +44,9 @@
     "abort": {
       "already_configured": "Este TermoWifi ya está configurado.",
       "not_termowifi": "El dispositivo no es un TermoWifi.",
-      "cannot_connect": "No se puede conectar con el dispositivo."
+      "cannot_connect": "No se puede conectar con el dispositivo.",
+      "already_configured_inactive": "{title} ya usa {host}, pero está deshabilitada o sin conexión. Habilítala o usa Reconfigurar en ella para cambiar su dirección.",
+      "reconfigure_successful": "Se ha actualizado la dirección."
     }
   }
 }

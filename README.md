@@ -59,6 +59,8 @@ other configurations.
   changed and it is the only entry set up by hand that lost its connection,
   the entry is moved to the new IP.
 
+To change the IP address or port later, use **Reconfigure** on the integration entry. The entities and automations are kept.
+
 Note: This integration uses config entries (UI setup). Do not add platform configuration to `configuration.yaml`.
 
 ## Configuration example
